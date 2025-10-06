@@ -42,31 +42,33 @@
         android:background="#66000000"
         android:padding="12dp">
 
-        <!-- 🎨 Dropdown Filter Selector -->
+        <!-- 🎨 Filter Dropdown (styled spinner) -->
         <LinearLayout
             android:id="@+id/filterSelectorLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="8dp">
 
             <Spinner
                 android:id="@+id/filterSpinner"
-                android:layout_width="240dp"
+                android:layout_width="260dp"
                 android:layout_height="52dp"
-                android:background="@drawable/spinner_main_bg"
-                android:popupBackground="@drawable/spinner_popup_bg"
+                android:layout_gravity="center"
                 android:spinnerMode="dropdown"
                 android:paddingHorizontal="16dp"
-                android:paddingVertical="10dp"
-                android:dropDownVerticalOffset="12dp"
+                android:paddingVertical="8dp"
                 android:layout_marginTop="6dp"
-                android:layout_gravity="center"
-                android:prompt="@string/select_filter_prompt" />
+                android:background="@drawable/spinner_main_bg"
+                android:popupBackground="@drawable/spinner_popup_bg"
+                android:dropDownVerticalOffset="14dp"
+                android:dropDownWidth="260dp"
+                android:prompt="@string/select_filter_prompt"
+                android:gravity="center" />
         </LinearLayout>
 
-        <!-- ✅ Filter Intensity Slider -->
+        <!-- 🎚️ Filter Intensity Slider -->
         <LinearLayout
             android:id="@+id/intensityPanel"
             android:layout_width="match_parent"
@@ -74,7 +76,7 @@
             android:orientation="vertical"
             android:gravity="center"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginBottom="6dp"
             android:visibility="visible">
 
             <TextView
@@ -84,7 +86,8 @@
                 android:text="Filter Intensity: 50%"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"
+                android:fontFamily="sans-serif-medium" />
 
             <SeekBar
                 android:id="@+id/intensitySlider"
@@ -96,7 +99,7 @@
                 android:progressTint="#9C27B0" />
         </LinearLayout>
 
-        <!-- 🔸 Capture + Gallery Buttons -->
+        <!-- 📸 Capture Button -->
         <Button
             android:id="@+id/btnCapture"
             android:layout_width="match_parent"
@@ -107,8 +110,10 @@
             android:textColor="#000000"
             android:background="@drawable/rounded_button_purple"
             android:paddingVertical="10dp"
-            android:layout_marginHorizontal="12dp" />
+            android:layout_marginHorizontal="12dp"
+            android:fontFamily="sans-serif-medium" />
 
+        <!-- 🖼️ Gallery Button -->
         <Button
             android:id="@+id/btnGallery"
             android:layout_width="match_parent"
@@ -119,10 +124,11 @@
             android:textColor="#000000"
             android:background="@drawable/rounded_button_purple"
             android:paddingVertical="10dp"
-            android:layout_marginHorizontal="12dp" />
+            android:layout_marginHorizontal="12dp"
+            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
-    <!-- ✅ Thumbnail Preview -->
+    <!-- 🖼️ Thumbnail Preview -->
     <ImageView
         android:id="@+id/thumbnailPreview"
         android:layout_width="80dp"
