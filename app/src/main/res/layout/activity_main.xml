@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- 🔹 Live Camera Preview -->
+    <TextureView
+        android:id="@+id/cameraView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Live camera feed" />
+
+    <!-- 🔹 Processed Image Overlay -->
+    <ImageView
+        android:id="@+id/processedPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:alpha="0.9" />
+
+    <!-- 🔹 FPS Counter -->
+    <TextView
+        android:id="@+id/fpsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="FPS: 0"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:background="#66000000"
+        android:padding="4dp" />
+
+    <!-- 🔹 Bottom Control Panel -->
+    <LinearLayout
+        android:id="@+id/buttonPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#66000000"
+        android:padding="12dp">
+
+        <!-- 🔸 Row for filters -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btnNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="None"
+                android:textAllCaps="false"
+                android:layout_marginHorizontal="6dp"
+                android:background="@drawable/rounded_button_purple"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnGray"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grayscale"
+                android:textAllCaps="false"
+                android:layout_marginHorizontal="6dp"
+                android:background="@drawable/rounded_button_purple"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnEdge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edge"
+                android:textAllCaps="false"
+                android:layout_marginHorizontal="6dp"
+                android:background="@drawable/rounded_button_purple"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- ✅ Filter Intensity Slider (now between filter buttons and capture button) -->
+        <LinearLayout
+            android:id="@+id/intensityPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/intensityLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filter Intensity: 50%"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp" />
+
+            <SeekBar
+                android:id="@+id/intensitySlider"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="50"
+                android:thumbTint="#9C27B0"
+                android:progressTint="#9C27B0" />
+        </LinearLayout>
+
+        <!-- 🔸 Full-width Capture Button -->
+        <Button
+            android:id="@+id/btnCapture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Capture Image"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:background="@drawable/rounded_button_purple"
+            android:paddingVertical="10dp"
+            android:layout_marginHorizontal="12dp" />
+    </LinearLayout>
+
+    <!-- ✅ Thumbnail Preview (bottom-left corner) -->
+    <ImageView
+        android:id="@+id/thumbnailPreview"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="150dp"
+        android:background="@drawable/thumb_bg_circle"
+        android:padding="3dp"
+        android:scaleType="centerCrop"
+        android:elevation="6dp"
+        android:clipToOutline="true"
+        android:outlineProvider="background"
+        android:visibility="gone"
+        android:contentDescription="Last captured photo thumbnail" />
+
+</FrameLayout>
