@@ -1,11 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ✅ Permission to access the device camera -->
+    <!-- ✅ Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- ✅ Permission to use vibration for haptic feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <!-- ✅ Declare that this app requires a camera -->
     <uses-feature
@@ -23,6 +24,7 @@
         android:theme="@style/Theme.OpenCVFilterApp"
         tools:targetApi="31">
 
+        <!-- 🏠 Main Camera Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,6 +35,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 🖼️ Gallery Activity (for in-app grid view) -->
+        <activity
+            android:name=".GalleryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- 🔍 Fullscreen Image Activity (when user taps an image) -->
+        <activity
+            android:name=".FullscreenImageActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
+
     </application>
 
 </manifest>

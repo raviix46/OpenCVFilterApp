@@ -86,6 +86,12 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             Toast.makeText(this, "📸 Image Saved Successfully!", Toast.LENGTH_SHORT).show()
         }
 
+        // 🆕 Open Gallery Button
+        binding.btnGallery.setOnClickListener {
+            val intent = Intent(this, GalleryActivity::class.java)
+            startActivity(intent)
+        }
+
         // ✅ Intensity Slider
         binding.intensitySlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
