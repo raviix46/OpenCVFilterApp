@@ -77,6 +77,60 @@ Java_com_example_opencvfilterapp_MainActivity_processFrameJNI(
                 break;
             }
 
+            case 3: { // 🟣 FINAL CARTOON FILTER — Fast + Real Transformation
+                try {
+                    Mat bgr, gray, edges, color;
+
+                    // 1️⃣ Convert RGBA → BGR
+                    cvtColor(src, bgr, COLOR_RGBA2BGR);
+
+                    // 2️⃣ Edge mask
+                    cvtColor(bgr, gray, COLOR_BGR2GRAY);
+                    medianBlur(gray, gray, 5);
+                    Laplacian(gray, edges, CV_8U, 5);
+                    threshold(edges, edges, 100, 255, THRESH_BINARY_INV);
+
+                    // 3️⃣ Fast color smoothing (pyramid method)
+                    Mat small;
+                    pyrDown(bgr, small);
+                    pyrDown(small, small);
+                    pyrUp(small, small);
+                    pyrUp(small, small);
+
+                    // 4️⃣ Color quantization (this gives the "cartoon" color blocks)
+                    Mat quantized;
+                    small.convertTo(quantized, CV_32F, 1.0 / 255.0);
+                    quantized = quantized * 6.0;  // reduce color levels
+                    quantized.convertTo(quantized, CV_8U, 255.0 / 6.0);
+
+                    // 5️⃣ Boost saturation slightly for a punchy look
+                    Mat hsv;
+                    cvtColor(quantized, hsv, COLOR_BGR2HSV);
+                    std::vector<Mat> channels;
+                    split(hsv, channels);
+                    channels[1] = channels[1] * 1.3; // increase saturation
+                    merge(channels, hsv);
+                    cvtColor(hsv, quantized, COLOR_HSV2BGR);
+
+                    // 6️⃣ Combine smoothed color regions with edge mask
+                    cvtColor(edges, edges, COLOR_GRAY2BGR);
+                    bitwise_and(quantized, edges, color);
+
+                    // 7️⃣ Convert back to RGBA for Android display
+                    cvtColor(color, dst, COLOR_BGR2RGBA);
+                }
+                catch (...) {
+                    src.copyTo(dst);
+                }
+                break;
+            }
+
+            case 4: { // BLUR
+                int ksize = std::max(1, (int)(intensity / 10) * 2 + 1);
+                GaussianBlur(src, dst, Size(ksize, ksize), 0);
+                break;
+            }
+
             default:
                 src.copyTo(dst);
         }

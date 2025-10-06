@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
     private lateinit var cameraCaptureSessions: CameraCaptureSession
 
     // ---------- Filter mode ----------
-    private enum class FilterMode { NONE, GRAY, EDGE }
+    private enum class FilterMode { NONE, GRAY, EDGE, CARTOON, BLUR }
     @Volatile private var filterMode: FilterMode = FilterMode.GRAY
 
     // Intensity (default = 50%)
@@ -74,6 +74,18 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
         binding.btnEdge.setOnClickListener {
             filterMode = FilterMode.EDGE
+            binding.intensityPanel.visibility = View.VISIBLE
+            moveThumbnail(true)
+        }
+
+        binding.btnCartoon.setOnClickListener {
+            filterMode = FilterMode.CARTOON
+            binding.intensityPanel.visibility = View.GONE  // Hide intensity for Cartoon
+            moveThumbnail(false)
+        }
+
+        binding.btnBlur.setOnClickListener {
+            filterMode = FilterMode.BLUR
             binding.intensityPanel.visibility = View.VISIBLE
             moveThumbnail(true)
         }

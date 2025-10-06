@@ -4,9 +4,13 @@
     <!-- ✅ Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Legacy write permission (needed only for Android 9 and below) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <!-- Read access for saved images / gallery -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Optional (for Android 13+): safer media-specific read -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <!-- ✅ Declare that this app requires a camera -->
     <uses-feature
@@ -22,7 +26,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.OpenCVFilterApp"
-        tools:targetApi="31">
+        tools:targetApi="34">
 
         <!-- 🏠 Main Camera Activity -->
         <activity
@@ -36,18 +40,29 @@
             </intent-filter>
         </activity>
 
-        <!-- 🖼️ Gallery Activity (for in-app grid view) -->
+        <!-- 🖼️ Gallery Activity (in-app image grid) -->
         <activity
             android:name=".GalleryActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <!-- 🔍 Fullscreen Image Activity (when user taps an image) -->
+        <!-- 🔍 Full-screen image viewer -->
         <activity
             android:name=".FullscreenImageActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
+
+        <!-- ✅ Required provider for image file sharing (optional safety) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

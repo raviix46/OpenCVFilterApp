@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Allow access to app's internal image directory -->
+    <external-files-path
+        name="captured_images"
+        path="Pictures/" />
+
+    <!-- Optional: allow sharing from cache (for previews or temp files) -->
+    <cache-path
+        name="shared_cache"
+        path="." />
+
+</paths>
