@@ -8,8 +8,8 @@ import android.hardware.camera2.*
 import android.os.*
 import android.provider.MediaStore
 import android.view.*
-import android.widget.SeekBar
-import android.widget.Toast
+import android.widget.*
+import android.widget.AdapterView.OnItemSelectedListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.opencvfilterapp.databinding.ActivityMainBinding
@@ -31,14 +31,10 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
     private enum class FilterMode { NONE, GRAY, EDGE, CARTOON, BLUR }
     @Volatile private var filterMode: FilterMode = FilterMode.GRAY
 
-    // Intensity (default = 50%)
     private var filterIntensity: Int = 50
-
-    // Reusable bitmap for processed frames
     private var outputBitmap: Bitmap? = null
     @Volatile private var latestFrame: Bitmap? = null
 
-    // FPS counter
     private var frameCount = 0
     private var lastFpsTs = SystemClock.elapsedRealtime()
 
@@ -49,7 +45,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         }
     }
 
-    // JNI: input bitmap, output bitmap, filter mode (0=none,1=gray,2=edge), intensity (0–100)
+    // JNI bridge
     external fun processFrameJNI(input: Bitmap, output: Bitmap, mode: Int, intensity: Int)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,38 +55,55 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
         binding.cameraView.surfaceTextureListener = this
 
-        // ---------- Buttons ----------
-        binding.btnNone.setOnClickListener {
-            filterMode = FilterMode.NONE
-            binding.intensityPanel.visibility = View.GONE
-            moveThumbnail(false)
+        // 🎨 Setup stylish spinner adapter
+        val adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.filter_options,
+            R.layout.spinner_item
+        ).apply {
+            setDropDownViewResource(R.layout.spinner_dropdown_item)
+        }
+        binding.filterSpinner.adapter = adapter
+
+        // 💡 Set prompt and safe selection (fix red underline)
+        binding.filterSpinner.prompt = getString(R.string.select_filter_prompt)
+        binding.filterSpinner.setSelection(0, false)
+
+        // 🎛️ Filter selection logic
+        binding.filterSpinner.onItemSelectedListener = object : OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                when (position) {
+                    0 -> { // None
+                        filterMode = FilterMode.NONE
+                        binding.intensityPanel.visibility = View.GONE
+                        moveThumbnail(false)
+                    }
+                    1 -> { // Grayscale
+                        filterMode = FilterMode.GRAY
+                        binding.intensityPanel.visibility = View.VISIBLE
+                        moveThumbnail(true)
+                    }
+                    2 -> { // Edge
+                        filterMode = FilterMode.EDGE
+                        binding.intensityPanel.visibility = View.VISIBLE
+                        moveThumbnail(true)
+                    }
+                    3 -> { // Cartoon
+                        filterMode = FilterMode.CARTOON
+                        binding.intensityPanel.visibility = View.GONE
+                        moveThumbnail(true)
+                    }
+                    4 -> { // Blur
+                        filterMode = FilterMode.BLUR
+                        binding.intensityPanel.visibility = View.VISIBLE
+                        moveThumbnail(true)
+                    }
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        binding.btnGray.setOnClickListener {
-            filterMode = FilterMode.GRAY
-            binding.intensityPanel.visibility = View.VISIBLE
-            moveThumbnail(true)
-        }
-
-        binding.btnEdge.setOnClickListener {
-            filterMode = FilterMode.EDGE
-            binding.intensityPanel.visibility = View.VISIBLE
-            moveThumbnail(true)
-        }
-
-        binding.btnCartoon.setOnClickListener {
-            filterMode = FilterMode.CARTOON
-            binding.intensityPanel.visibility = View.GONE  // Hide intensity for Cartoon
-            moveThumbnail(false)
-        }
-
-        binding.btnBlur.setOnClickListener {
-            filterMode = FilterMode.BLUR
-            binding.intensityPanel.visibility = View.VISIBLE
-            moveThumbnail(true)
-        }
-
-        // ✅ Capture Image Button
+        // 📸 Capture image
         binding.btnCapture.setOnClickListener {
             saveCurrentFrame()
             showFlashEffect()
@@ -98,13 +111,13 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             Toast.makeText(this, "📸 Image Saved Successfully!", Toast.LENGTH_SHORT).show()
         }
 
-        // 🆕 Open Gallery Button
+        // 🖼️ Open gallery
         binding.btnGallery.setOnClickListener {
             val intent = Intent(this, GalleryActivity::class.java)
             startActivity(intent)
         }
 
-        // ✅ Intensity Slider
+        // 🎚️ Intensity slider
         binding.intensitySlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 filterIntensity = progress
@@ -117,7 +130,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         ensureLegacyWritePermission()
     }
 
-    // ---------- Camera ----------
+    // ---------- CAMERA ----------
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         openCamera()
     }
@@ -187,7 +200,6 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             latestFrame = src
         }
 
-        // FPS counter
         frameCount++
         val now = SystemClock.elapsedRealtime()
         if (now - lastFpsTs >= 1000) {
@@ -197,11 +209,9 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         }
     }
 
-    // ---------- Thumbnail Animation ----------
+    // ---------- ANIMATION ----------
     private fun moveThumbnail(up: Boolean) {
-        // Move slightly higher (previously -80f → now -120f for better spacing)
         val targetY = if (up) -160f else 0f
-
         binding.thumbnailPreview.animate()
             .translationY(targetY)
             .setDuration(350)
@@ -209,7 +219,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             .start()
     }
 
-    // ---------- Capture & Save ----------
+    // ---------- SAVE IMAGE ----------
     private fun saveCurrentFrame() {
         val bmp = latestFrame ?: return toast("No frame available yet")
         val copy = bmp.copy(Bitmap.Config.ARGB_8888, false)
@@ -247,11 +257,8 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 Uri.fromFile(file)
             }
 
-            // ✅ Update thumbnail preview
             binding.thumbnailPreview.setImageBitmap(bmp)
             binding.thumbnailPreview.visibility = View.VISIBLE
-
-            // ✅ Open full image on click
             binding.thumbnailPreview.setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, "image/*")
@@ -267,7 +274,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         }
     }
 
-    // ---------- Flash & Vibration ----------
+    // ---------- EFFECTS ----------
     private fun showFlashEffect() {
         val flashView = View(this)
         flashView.setBackgroundColor(Color.WHITE)
