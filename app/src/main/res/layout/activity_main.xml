@@ -53,17 +53,14 @@
 
             <Spinner
                 android:id="@+id/filterSpinner"
-                android:layout_width="260dp"
+                android:layout_width="280dp"
                 android:layout_height="52dp"
                 android:layout_gravity="center"
                 android:spinnerMode="dropdown"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
-                android:layout_marginTop="6dp"
+                android:elevation="8dp"
+                android:dropDownVerticalOffset="10dp"
                 android:background="@drawable/spinner_main_bg"
                 android:popupBackground="@drawable/spinner_popup_bg"
-                android:dropDownVerticalOffset="14dp"
-                android:dropDownWidth="260dp"
                 android:prompt="@string/select_filter_prompt"
                 android:gravity="center" />
         </LinearLayout>

@@ -1,9 +1,9 @@
 <resources>
     <string-array name="filter_options">
         <item>None</item>
-        <item>Grayscale</item>
-        <item>Edge</item>
         <item>Cartoon</item>
+        <item>Edge</item>
         <item>Blur</item>
+        <item>Grayscale</item>
     </string-array>
 </resources>
