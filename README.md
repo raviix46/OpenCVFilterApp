@@ -1,1 +1,1 @@
-# -OpenCVFilterApp
+# OpenCVFilterApp
