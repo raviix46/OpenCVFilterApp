@@ -55,27 +55,43 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
         binding.cameraView.surfaceTextureListener = this
 
-        // 🎨 Setup Spinner with stylish layout
-        val adapter = ArrayAdapter.createFromResource(
+        // 🎨 Define filters (matches native-lib.cpp order)
+        val filters = listOf("None", "Cartoon", "Edge", "Blur", "Grayscale")
+
+        // 🟣 Create a hint adapter (only shows "Select Filter" at startup)
+        val hintAdapter = object : ArrayAdapter<String>(
             this,
-            R.array.filter_options,
-            R.layout.spinner_item
-        ).apply {
+            R.layout.spinner_item,
+            listOf("🎨 Select Filter")
+        ) {
+            override fun isEnabled(position: Int): Boolean = false
+        }
+
+        // 🟢 Real adapter for filters
+        val mainAdapter = ArrayAdapter(this, R.layout.spinner_item, filters).apply {
             setDropDownViewResource(R.layout.spinner_dropdown_item)
         }
-        binding.filterSpinner.adapter = adapter
 
-        // ✨ Set hint text at startup (temporary)
-        binding.filterSpinner.prompt = getString(R.string.select_filter_prompt)
+        // Show hint instantly
+        binding.filterSpinner.adapter = hintAdapter
 
-        // 👇 Show hint manually before user selection
-        (binding.filterSpinner.selectedView as? TextView)?.text = getString(R.string.select_filter_prompt)
+        // Replace with real adapter after short delay (no flicker)
+        binding.filterSpinner.postDelayed({
+            binding.filterSpinner.adapter = mainAdapter
+            binding.filterSpinner.setSelection(-1, false)
+        }, 300)
 
-        // 🪄 Dropdown Filter Selection Listener
+        // 🪄 Handle user selections
         binding.filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedFilter = parent.getItemAtPosition(position).toString()
-                (view as? TextView)?.text = selectedFilter  // update selected label text
+                if (position == AdapterView.INVALID_POSITION) return
+
+                val selected = filters[position]
+                (view as? TextView)?.apply {
+                    text = selected
+                    setTextColor(Color.WHITE)
+                    setTypeface(null, Typeface.NORMAL)
+                }
 
                 when (position) {
                     0 -> { // None
@@ -109,8 +125,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-// ✅ Default startup state (show hint text but no filter active)
-        binding.filterSpinner.setSelection(-1, false)
+        // 🟢 Default state
         filterMode = FilterMode.NONE
         binding.intensityPanel.visibility = View.GONE
 
