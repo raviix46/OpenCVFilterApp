@@ -149,7 +149,7 @@ case 1: { // Cartoon Filter
 
 ```bash
 # Clone repository
-git clone https://github.com/GSNAIK-GAUTAMI/OpenCVFilterApp.git
+git clone https://github.com/raviix46/OpenCVFilterApp.git
 cd OpenCVFilterApp
 
 # Open in Android Studio
