@@ -19,6 +19,7 @@ import android.net.Uri
 import android.content.Intent
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.graphics.drawable.ColorDrawable
 
 class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
@@ -52,6 +53,25 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // 🎯 Replace default title with a perfectly centered custom TextView
+        supportActionBar?.apply {
+            displayOptions = androidx.appcompat.app.ActionBar.DISPLAY_SHOW_CUSTOM
+            customView = TextView(this@MainActivity).apply {
+                text = "🎨 OpenCV Filter App"
+                textSize = 18f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                gravity = Gravity.CENTER
+                setPadding(0, 10, 0, 10)
+                layoutParams = androidx.appcompat.app.ActionBar.LayoutParams(
+                    androidx.appcompat.app.ActionBar.LayoutParams.MATCH_PARENT,
+                    androidx.appcompat.app.ActionBar.LayoutParams.WRAP_CONTENT,
+                    Gravity.CENTER
+                )
+            }
+            setBackgroundDrawable(ColorDrawable(Color.parseColor("#7B1FA2"))) // Purple header
+        }
 
         binding.cameraView.surfaceTextureListener = this
 

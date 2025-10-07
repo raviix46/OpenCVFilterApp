@@ -2,21 +2,49 @@
 
     <!-- 🌟 Base application theme -->
     <style name="Theme.OpenCVFilterApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color -->
+
+        <!-- Brand Colors -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/white</item>
 
-        <!-- Secondary brand color -->
+        <!-- Secondary Colors -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
 
-        <!-- Status bar color -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Status Bar -->
+        <item name="android:statusBarColor">@color/purple_700</item>
+
+        <!-- 🎨 Action Bar Styling -->
+        <item name="android:actionBarStyle">@style/CustomActionBar</item>
+        <item name="android:windowActionBarOverlay">false</item>
+        <item name="android:windowNoTitle">false</item>
+
+        <!-- General UI -->
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
-    <!-- 🖼️ Fullscreen theme for image viewer (used in FullscreenImageActivity) -->
+    <!-- 🎨 Custom ActionBar style -->
+    <style name="CustomActionBar" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/purple_700</item>
+        <item name="android:titleTextStyle">@style/CustomActionBarTitle</item>
+        <item name="android:gravity">center</item>
+        <item name="android:displayOptions">showTitle</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
+    <!-- 🏷️ ActionBar Title Style -->
+    <style name="CustomActionBarTitle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- 🖼️ Fullscreen theme for image viewer -->
     <style name="Theme.AppCompat.Light.NoActionBar.FullScreen" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
