@@ -93,32 +93,33 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                     setTypeface(null, Typeface.NORMAL)
                 }
 
+                // 🔹 Apply filter logic without hiding thumbnail
                 when (position) {
                     0 -> { // None
                         filterMode = FilterMode.NONE
                         binding.intensityPanel.visibility = View.GONE
-                        moveThumbnail(false)
                     }
                     1 -> { // Cartoon
                         filterMode = FilterMode.CARTOON
                         binding.intensityPanel.visibility = View.GONE
-                        moveThumbnail(true)
                     }
                     2 -> { // Edge
                         filterMode = FilterMode.EDGE
                         binding.intensityPanel.visibility = View.VISIBLE
-                        moveThumbnail(true)
                     }
                     3 -> { // Blur
                         filterMode = FilterMode.BLUR
                         binding.intensityPanel.visibility = View.VISIBLE
-                        moveThumbnail(true)
                     }
                     4 -> { // Grayscale
                         filterMode = FilterMode.GRAY
                         binding.intensityPanel.visibility = View.VISIBLE
-                        moveThumbnail(true)
                     }
+                }
+
+                // ✅ Keep thumbnail always visible (no flicker)
+                if (binding.thumbnailPreview.drawable != null) {
+                    binding.thumbnailPreview.visibility = View.VISIBLE
                 }
             }
 
@@ -237,11 +238,11 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
     // ---------- ANIMATION ----------
     private fun moveThumbnail(up: Boolean) {
-        val targetY = if (up) -160f else 0f
+        if (binding.thumbnailPreview.visibility != View.VISIBLE) return
+        val offsetY = -8f // tiny lift for style
         binding.thumbnailPreview.animate()
-            .translationY(targetY)
-            .setDuration(350)
-            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .translationY(offsetY)
+            .setDuration(250)
             .start()
     }
 
