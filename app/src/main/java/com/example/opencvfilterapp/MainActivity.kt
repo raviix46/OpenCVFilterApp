@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
     private lateinit var cameraCaptureSessions: CameraCaptureSession
 
     // ---------- Filter mode ----------
-    private enum class FilterMode { NONE, GRAY, EDGE, CARTOON, BLUR }
+    private enum class FilterMode { NONE, CARTOON, EDGE, BLUR, GRAY}
     @Volatile private var filterMode: FilterMode = FilterMode.GRAY
 
     private var filterIntensity: Int = 50
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
         binding.cameraView.surfaceTextureListener = this
 
-        // 🎨 Setup stylish spinner adapter
+        // 🎨 Setup Spinner with stylish layout
         val adapter = ArrayAdapter.createFromResource(
             this,
             R.array.filter_options,
@@ -65,22 +65,27 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         }
         binding.filterSpinner.adapter = adapter
 
-        // 💡 Set prompt and safe selection (fix red underline)
+        // ✨ Set hint text at startup (temporary)
         binding.filterSpinner.prompt = getString(R.string.select_filter_prompt)
-        binding.filterSpinner.setSelection(0, false)
 
-        // 🎛️ Filter selection logic
-        binding.filterSpinner.onItemSelectedListener = object : OnItemSelectedListener {
+        // 👇 Show hint manually before user selection
+        (binding.filterSpinner.selectedView as? TextView)?.text = getString(R.string.select_filter_prompt)
+
+        // 🪄 Dropdown Filter Selection Listener
+        binding.filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedFilter = parent.getItemAtPosition(position).toString()
+                (view as? TextView)?.text = selectedFilter  // update selected label text
+
                 when (position) {
                     0 -> { // None
                         filterMode = FilterMode.NONE
                         binding.intensityPanel.visibility = View.GONE
                         moveThumbnail(false)
                     }
-                    1 -> { // Grayscale
-                        filterMode = FilterMode.GRAY
-                        binding.intensityPanel.visibility = View.VISIBLE
+                    1 -> { // Cartoon
+                        filterMode = FilterMode.CARTOON
+                        binding.intensityPanel.visibility = View.GONE
                         moveThumbnail(true)
                     }
                     2 -> { // Edge
@@ -88,20 +93,26 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                         binding.intensityPanel.visibility = View.VISIBLE
                         moveThumbnail(true)
                     }
-                    3 -> { // Cartoon
-                        filterMode = FilterMode.CARTOON
-                        binding.intensityPanel.visibility = View.GONE
+                    3 -> { // Blur
+                        filterMode = FilterMode.BLUR
+                        binding.intensityPanel.visibility = View.VISIBLE
                         moveThumbnail(true)
                     }
-                    4 -> { // Blur
-                        filterMode = FilterMode.BLUR
+                    4 -> { // Grayscale
+                        filterMode = FilterMode.GRAY
                         binding.intensityPanel.visibility = View.VISIBLE
                         moveThumbnail(true)
                     }
                 }
             }
+
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
+
+// ✅ Default startup state (show hint text but no filter active)
+        binding.filterSpinner.setSelection(-1, false)
+        filterMode = FilterMode.NONE
+        binding.intensityPanel.visibility = View.GONE
 
         // 📸 Capture image
         binding.btnCapture.setOnClickListener {

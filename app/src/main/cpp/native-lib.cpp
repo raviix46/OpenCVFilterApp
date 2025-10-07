@@ -47,37 +47,7 @@ Java_com_example_opencvfilterapp_MainActivity_processFrameJNI(
                 src.copyTo(dst);
                 break;
 
-            case 1: { // GRAYSCALE + brightness scaling
-                Mat gray;
-                cvtColor(src, gray, COLOR_RGBA2GRAY);
-                cvtColor(gray, dst, COLOR_GRAY2RGBA);
-
-                // Adjust brightness/contrast using intensity (0–100)
-                double scale = std::max(0.1, intensity / 50.0); // 50 = normal brightness
-                dst.convertTo(dst, -1, scale, 0);
-                break;
-            }
-
-            case 2: { // Edge Detection (Canny)
-                Mat gray, edges;
-                cvtColor(src, gray, COLOR_RGBA2GRAY);
-                GaussianBlur(gray, gray, Size(5, 5), 1.2);
-
-                // Reverse intensity mapping for correct behavior
-                double factor = (100.0 - intensity) / 100.0;  // 0 → 1 range reversed
-                double lowThresh = 30 + (factor * 80);        // 30–110 range
-                double highThresh = 90 + (factor * 120);      // 90–210 range
-
-                Canny(gray, edges, lowThresh, highThresh);
-
-                // White background, dark edges
-                Mat inverted;
-                bitwise_not(edges, inverted);
-                cvtColor(inverted, dst, COLOR_GRAY2RGBA);
-                break;
-            }
-
-            case 3: { // 🟣 FINAL CARTOON FILTER — Fast + Real Transformation
+            case 1: { // 🟣 FINAL CARTOON FILTER — Fast + Real Transformation
                 try {
                     Mat bgr, gray, edges, color;
 
@@ -125,9 +95,39 @@ Java_com_example_opencvfilterapp_MainActivity_processFrameJNI(
                 break;
             }
 
-            case 4: { // BLUR
+            case 2: { // Edge Detection (Canny)
+                Mat gray, edges;
+                cvtColor(src, gray, COLOR_RGBA2GRAY);
+                GaussianBlur(gray, gray, Size(5, 5), 1.2);
+
+                // Reverse intensity mapping for correct behavior
+                double factor = (100.0 - intensity) / 100.0;  // 0 → 1 range reversed
+                double lowThresh = 30 + (factor * 80);        // 30–110 range
+                double highThresh = 90 + (factor * 120);      // 90–210 range
+
+                Canny(gray, edges, lowThresh, highThresh);
+
+                // White background, dark edges
+                Mat inverted;
+                bitwise_not(edges, inverted);
+                cvtColor(inverted, dst, COLOR_GRAY2RGBA);
+                break;
+            }
+
+            case 3: { // BLUR
                 int ksize = std::max(1, (int)(intensity / 10) * 2 + 1);
                 GaussianBlur(src, dst, Size(ksize, ksize), 0);
+                break;
+            }
+
+            case 4: { // GRAYSCALE + brightness scaling
+                Mat gray;
+                cvtColor(src, gray, COLOR_RGBA2GRAY);
+                cvtColor(gray, dst, COLOR_GRAY2RGBA);
+
+                // Adjust brightness/contrast using intensity (0–100)
+                double scale = std::max(0.1, intensity / 50.0); // 50 = normal brightness
+                dst.convertTo(dst, -1, scale, 0);
                 break;
             }
 
