@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             saveCurrentFrame()
             showFlashEffect()
             vibrateBriefly()
-            Toast.makeText(this, "📸 Image Saved Successfully!", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this, "📸 Image Saved Successfully!", Toast.LENGTH_SHORT).show()
         }
 
         // 🖼️ Open gallery
@@ -263,6 +263,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                     put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/OpenCVFilterApp")
                     put(MediaStore.Images.Media.IS_PENDING, 1)
                 }
+
                 val newUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
                     ?: throw RuntimeException("MediaStore insert failed")
 
@@ -284,8 +285,41 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 Uri.fromFile(file)
             }
 
-            binding.thumbnailPreview.setImageBitmap(bmp)
-            binding.thumbnailPreview.visibility = View.VISIBLE
+            // ✅ Animated thumbnail update
+            binding.thumbnailPreview.apply {
+                if (visibility == View.VISIBLE) {
+                    animate()
+                        .translationY(-40f)
+                        .alpha(0f)
+                        .setDuration(200)
+                        .withEndAction {
+                            setImageBitmap(bmp)
+                            translationY = 40f
+                            alpha = 0f
+                            visibility = View.VISIBLE
+                            animate()
+                                .translationY(0f)
+                                .alpha(1f)
+                                .setDuration(250)
+                                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                                .start()
+                        }
+                        .start()
+                } else {
+                    setImageBitmap(bmp)
+                    translationY = 40f
+                    alpha = 0f
+                    visibility = View.VISIBLE
+                    animate()
+                        .translationY(0f)
+                        .alpha(1f)
+                        .setDuration(250)
+                        .setInterpolator(android.view.animation.DecelerateInterpolator())
+                        .start()
+                }
+            }
+
+            // ✅ Tap thumbnail to open image
             binding.thumbnailPreview.setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, "image/*")
@@ -294,10 +328,41 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 startActivity(intent)
             }
 
-            toast("📸 Image Saved Successfully!")
+            // ✅ Stylish custom toast feedback
+            // ✅ Stylish custom toast feedback with animation
+            val toastView = layoutInflater.inflate(R.layout.custom_toast, null)
+            toastView.findViewById<TextView>(R.id.toastText).text = "📸 Image Saved Successfully!"
+
+            // 🎬 Smooth slide-down + fade-in animation
+            toastView.translationY = -80f
+            toastView.alpha = 0f
+            toastView.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(300)
+                .start()
+
+            val toast = Toast(this)
+            toast.view = toastView
+            toast.duration = Toast.LENGTH_SHORT
+            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 180)
+            toast.show()
+
         } catch (e: Exception) {
             e.printStackTrace()
-            toast("Save failed: ${e.message}")
+
+            // 🔴 Themed error toast
+            val toastView = layoutInflater.inflate(R.layout.custom_toast, null)
+            val toastText = toastView.findViewById<TextView>(R.id.toastText)
+            toastText.text = "❌ Save failed: ${e.message}"
+            toastText.setTextColor(Color.WHITE)
+            toastView.setBackgroundResource(android.R.color.holo_red_dark)
+
+            val toast = Toast(this)
+            toast.view = toastView
+            toast.duration = Toast.LENGTH_SHORT
+            toast.setGravity(Gravity.CENTER, 0, -250)
+            toast.show()
         }
     }
 
