@@ -42,27 +42,45 @@
         android:background="#66000000"
         android:padding="12dp">
 
-        <!-- 🎨 Filter Dropdown -->
+        <!-- 🎨 Filter Row: Thumbnail + Dropdown -->
         <LinearLayout
             android:id="@+id/filterSelectorLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:layout_marginBottom="8dp">
 
+            <!-- 🖼️ Square Thumbnail -->
+            <ImageView
+                android:id="@+id/thumbnailPreview"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/thumb_square_bg"
+                android:padding="3dp"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:elevation="6dp"
+                android:clipToOutline="true"
+                android:outlineProvider="background"
+                android:visibility="gone"
+                android:contentDescription="Last captured photo thumbnail" />
+
+            <!-- 🎛️ Filter Dropdown -->
             <Spinner
                 android:id="@+id/filterSpinner"
-                android:layout_width="280dp"
+                android:layout_width="240dp"
                 android:layout_height="52dp"
-                android:layout_gravity="center"
                 android:spinnerMode="dropdown"
+                android:gravity="center"
                 android:elevation="8dp"
-                android:dropDownVerticalOffset="10dp"
-                android:dropDownWidth="280dp"
                 android:background="@drawable/spinner_main_bg"
                 android:popupBackground="@drawable/spinner_popup_bg"
-                android:gravity="center"
+                android:dropDownVerticalOffset="10dp"
+                android:dropDownWidth="260dp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
                 android:prompt="@string/select_filter_prompt" />
         </LinearLayout>
 
@@ -125,22 +143,5 @@
             android:layout_marginHorizontal="12dp"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
-
-    <!-- 🖼️ Thumbnail Preview -->
-    <ImageView
-        android:id="@+id/thumbnailPreview"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="bottom|start"
-        android:layout_marginStart="20dp"
-        android:layout_marginBottom="160dp"
-        android:background="@drawable/thumb_bg_circle"
-        android:padding="3dp"
-        android:scaleType="centerCrop"
-        android:elevation="6dp"
-        android:clipToOutline="true"
-        android:outlineProvider="background"
-        android:visibility="gone"
-        android:contentDescription="Last captured photo thumbnail" />
 
 </FrameLayout>
