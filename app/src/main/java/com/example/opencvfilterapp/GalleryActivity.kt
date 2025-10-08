@@ -1,39 +1,75 @@
 package com.example.opencvfilterapp
 
+import android.content.ContentUris
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.exifinterface.media.ExifInterface
+import androidx.viewpager2.widget.ViewPager2
 import com.example.opencvfilterapp.databinding.ActivityGalleryBinding
+import java.io.File
+import java.io.InputStream
 
 class GalleryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGalleryBinding
     private val imageUris = mutableListOf<Uri>()
+    private lateinit var adapter: GalleryAdapter
+
+    private lateinit var viewPager: ViewPager2
+    private lateinit var photoInfo: TextView
+    private lateinit var btnShare: ImageButton
+    private lateinit var btnDelete: ImageButton
+    private lateinit var btnFavorite: ImageButton
+
+    // Store favorites in memory for now (could use SharedPreferences later)
+    private val favorites = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGalleryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // RecyclerView setup
-        binding.recyclerView.layoutManager = GridLayoutManager(this, 3)
-        val adapter = GalleryAdapter(imageUris) { uri ->
-            val intent = Intent(this, FullscreenImageActivity::class.java)
-            intent.putExtra("imageUri", uri.toString())
-            startActivity(intent)
-        }
-        binding.recyclerView.adapter = adapter
+        // Bind views
+        viewPager = binding.viewPager
+        photoInfo = binding.photoInfo
+        btnShare = binding.btnShare
+        btnDelete = binding.btnDelete
+        btnFavorite = binding.btnFavorite
 
-        // Load all saved images
+        // Load all saved images from /Pictures/OpenCVFilterApp
         loadImages()
-        adapter.notifyDataSetChanged()
+
+        // Adapter for swipe navigation
+        adapter = GalleryAdapter(imageUris)
+        viewPager.adapter = adapter
+
+        // Set first photo info
+        if (imageUris.isNotEmpty()) updatePhotoInfo(0)
+
+        // Swipe listener
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                updatePhotoInfo(position)
+            }
+        })
+
+        // --- Button Handlers ---
+        btnShare.setOnClickListener { shareImage(getCurrentUri()) }
+        btnDelete.setOnClickListener { deleteImage(getCurrentUri()) }
+        btnFavorite.setOnClickListener { toggleFavorite(getCurrentUri()) }
     }
 
+    private fun getCurrentUri(): Uri = imageUris[viewPager.currentItem]
+
+    // Load image URIs from MediaStore
     private fun loadImages() {
+        imageUris.clear()
         val projection = arrayOf(MediaStore.Images.Media._ID)
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
@@ -49,12 +85,73 @@ class GalleryActivity : AppCompatActivity() {
             val idColumn = it.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             while (it.moveToNext()) {
                 val id = it.getLong(idColumn)
-                val uri = Uri.withAppendedPath(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    id.toString()
-                )
+                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
                 imageUris.add(uri)
             }
+        }
+    }
+
+    // 🧠 Display EXIF metadata
+    private fun updatePhotoInfo(position: Int) {
+        val uri = imageUris[position]
+        try {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            val exif = inputStream?.let { ExifInterface(it) }
+
+            val filterInfo = exif?.getAttribute(ExifInterface.TAG_USER_COMMENT)
+                ?: "Filter Info Unavailable"
+            val timestamp = exif?.getAttribute(ExifInterface.TAG_DATETIME)
+                ?: "Unknown Date"
+
+            photoInfo.text = "🖋 $filterInfo • $timestamp"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            photoInfo.text = "❌ Metadata not found"
+        }
+    }
+
+    // 📤 Share photo
+    private fun shareImage(uri: Uri) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/jpeg"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(shareIntent, "Share Image via"))
+    }
+
+    // 🗑️ Delete photo
+    private fun deleteImage(uri: Uri) {
+        try {
+            contentResolver.delete(uri, null, null)
+            val position = viewPager.currentItem
+            imageUris.removeAt(position)
+            adapter.notifyItemRemoved(position)
+            Toast.makeText(this, "🗑️ Image deleted", Toast.LENGTH_SHORT).show()
+
+            if (imageUris.isEmpty()) {
+                finish()
+            } else {
+                val newPos = position.coerceAtMost(imageUris.size - 1)
+                viewPager.setCurrentItem(newPos, true)
+                updatePhotoInfo(newPos)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "❌ Failed to delete: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ❤️ Favorite / Unfavorite
+    private fun toggleFavorite(uri: Uri) {
+        val key = uri.toString()
+        if (favorites.contains(key)) {
+            favorites.remove(key)
+            btnFavorite.setImageResource(R.drawable.ic_favorite_border)
+            Toast.makeText(this, "💔 Removed from favorites", Toast.LENGTH_SHORT).show()
+        } else {
+            favorites.add(key)
+            btnFavorite.setImageResource(R.drawable.ic_favorite)
+            Toast.makeText(this, "❤️ Added to favorites", Toast.LENGTH_SHORT).show()
         }
     }
 }

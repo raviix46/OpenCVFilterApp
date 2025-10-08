@@ -72,6 +72,7 @@ dependencies {
 
     // ✅ EXIF Metadata Support (for saving filter name & intensity)
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

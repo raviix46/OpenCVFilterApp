@@ -1,23 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:background="#121212">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="📸 My Captured Photos"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:layout_gravity="center"
-        android:layout_marginVertical="8dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <!-- 🔹 Swipeable full-screen image viewer -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="4dp" />
-</LinearLayout>
+        android:orientation="horizontal"
+        android:overScrollMode="never" />
+
+    <!-- 🔹 Overlay info + control bar -->
+    <LinearLayout
+        android:id="@+id/galleryControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="#66000000"
+        android:padding="12dp">
+
+        <!-- 🕒 Filter & Timestamp Info -->
+        <TextView
+            android:id="@+id/photoInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Filter: None • 2025-10-08 19:45"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:paddingBottom="8dp"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- 🧭 Control Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="4dp">
+
+            <!-- Share -->
+            <ImageButton
+                android:id="@+id/btnShare"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_share"
+                android:background="@android:color/transparent"
+                android:contentDescription="Share"
+                android:tint="#FFFFFF"
+                android:padding="12dp" />
+
+            <!-- Delete -->
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_delete"
+                android:background="@android:color/transparent"
+                android:contentDescription="Delete"
+                android:tint="#FFFFFF"
+                android:padding="12dp" />
+
+            <!-- Favorite -->
+            <ImageButton
+                android:id="@+id/btnFavorite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_favorite_border"
+                android:background="@android:color/transparent"
+                android:contentDescription="Favorite"
+                android:tint="#FFFFFF"
+                android:padding="12dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

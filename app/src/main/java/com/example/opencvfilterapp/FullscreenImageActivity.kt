@@ -3,6 +3,7 @@ package com.example.opencvfilterapp
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.example.opencvfilterapp.databinding.ActivityFullscreenImageBinding
 
 class FullscreenImageActivity : AppCompatActivity() {
@@ -14,9 +15,20 @@ class FullscreenImageActivity : AppCompatActivity() {
         binding = ActivityFullscreenImageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val uri = Uri.parse(intent.getStringExtra("imageUri"))
-        binding.fullscreenImage.setImageURI(uri)
+        // Hide action bar for immersive experience
+        supportActionBar?.hide()
 
-        binding.fullscreenImage.setOnClickListener { finish() }
+        val uriString = intent.getStringExtra("imageUri")
+        val uri = uriString?.let { Uri.parse(it) }
+
+        // Load image smoothly
+        Glide.with(this)
+            .load(uri)
+            .placeholder(R.drawable.image_sample)
+            .fitCenter()
+            .into(binding.fullscreenImage)
+
+        // Tap anywhere to close
+        binding.fullscreenImage.setOnClickListener { finishAfterTransition() }
     }
 }
