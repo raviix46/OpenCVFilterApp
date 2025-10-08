@@ -16,14 +16,14 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ Pass compiler flags to CMake
+        // ✅ Pass compiler flags to CMake (C++17)
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
             }
         }
 
-        // ✅ ABI filters ensure .so files for all supported architectures
+        // ✅ Include all major ABI architectures
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
         }
@@ -48,7 +48,7 @@ android {
         jvmTarget = "11"
     }
 
-    // ✅ Updated to point to correct native CMakeLists.txt inside cpp/
+    // ✅ Connect to native C++ build system
     externalNativeBuild {
         cmake {
             path = file("CMakeLists.txt")
@@ -56,7 +56,7 @@ android {
         }
     }
 
-    // ✅ Ensure Gradle finds JNI libraries (like libopencv_java4.so)
+    // ✅ JNI native libraries directory
     sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs")
 
     buildFeatures {
@@ -65,15 +65,18 @@ android {
 }
 
 dependencies {
+    // --- Android Core ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
 
-    // ✅ EXIF Metadata Support (for saving filter name & intensity)
-    implementation("androidx.exifinterface:exifinterface:1.3.7")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
+    // --- Imaging & Metadata ---
+    implementation("androidx.exifinterface:exifinterface:1.3.7") // EXIF metadata (filter info)
+    implementation("com.github.bumptech.glide:glide:4.16.0")     // Efficient image loading
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")       // Zoomable image viewer
 
+    // --- Testing ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

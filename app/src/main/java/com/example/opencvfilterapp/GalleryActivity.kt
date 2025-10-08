@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.exifinterface.media.ExifInterface
 import androidx.viewpager2.widget.ViewPager2
 import com.example.opencvfilterapp.databinding.ActivityGalleryBinding
-import java.io.File
 import java.io.InputStream
 
 class GalleryActivity : AppCompatActivity() {
@@ -27,8 +26,9 @@ class GalleryActivity : AppCompatActivity() {
     private lateinit var btnDelete: ImageButton
     private lateinit var btnFavorite: ImageButton
 
-    // Store favorites in memory for now (could use SharedPreferences later)
+    // ❤️ Store favorites persistently
     private val favorites = mutableSetOf<String>()
+    private val prefs by lazy { getSharedPreferences("gallery_prefs", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,14 +42,17 @@ class GalleryActivity : AppCompatActivity() {
         btnDelete = binding.btnDelete
         btnFavorite = binding.btnFavorite
 
-        // Load all saved images from /Pictures/OpenCVFilterApp
+        // Load favorites from storage
+        favorites.addAll(prefs.getStringSet("favorites", emptySet()) ?: emptySet())
+
+        // Load all saved images
         loadImages()
 
-        // Adapter for swipe navigation
+        // Adapter setup
         adapter = GalleryAdapter(imageUris)
         viewPager.adapter = adapter
 
-        // Set first photo info
+        // Initialize first photo info
         if (imageUris.isNotEmpty()) updatePhotoInfo(0)
 
         // Swipe listener
@@ -59,6 +62,15 @@ class GalleryActivity : AppCompatActivity() {
             }
         })
 
+        // ✨ Tap anywhere on the image to hide/show control bar
+        viewPager.setOnClickListener {
+            val controls = binding.galleryControls
+            controls.animate()
+                .alpha(if (controls.alpha == 1f) 0f else 1f)
+                .setDuration(200)
+                .start()
+        }
+
         // --- Button Handlers ---
         btnShare.setOnClickListener { shareImage(getCurrentUri()) }
         btnDelete.setOnClickListener { deleteImage(getCurrentUri()) }
@@ -67,7 +79,7 @@ class GalleryActivity : AppCompatActivity() {
 
     private fun getCurrentUri(): Uri = imageUris[viewPager.currentItem]
 
-    // Load image URIs from MediaStore
+    // 🖼 Load image URIs from MediaStore
     private fun loadImages() {
         imageUris.clear()
         val projection = arrayOf(MediaStore.Images.Media._ID)
@@ -104,6 +116,14 @@ class GalleryActivity : AppCompatActivity() {
                 ?: "Unknown Date"
 
             photoInfo.text = "🖋 $filterInfo • $timestamp"
+
+            // Update favorite icon
+            val key = uri.toString()
+            if (favorites.contains(key))
+                btnFavorite.setImageResource(R.drawable.ic_favorite)
+            else
+                btnFavorite.setImageResource(R.drawable.ic_favorite_border)
+
         } catch (e: Exception) {
             e.printStackTrace()
             photoInfo.text = "❌ Metadata not found"
@@ -141,17 +161,33 @@ class GalleryActivity : AppCompatActivity() {
         }
     }
 
-    // ❤️ Favorite / Unfavorite
+    // ❤️ Favorite / Unfavorite (Persistent + Animated)
     private fun toggleFavorite(uri: Uri) {
         val key = uri.toString()
         if (favorites.contains(key)) {
             favorites.remove(key)
             btnFavorite.setImageResource(R.drawable.ic_favorite_border)
+            animateHeart()
             Toast.makeText(this, "💔 Removed from favorites", Toast.LENGTH_SHORT).show()
         } else {
             favorites.add(key)
             btnFavorite.setImageResource(R.drawable.ic_favorite)
+            animateHeart()
             Toast.makeText(this, "❤️ Added to favorites", Toast.LENGTH_SHORT).show()
         }
+
+        // Save favorites persistently
+        prefs.edit().putStringSet("favorites", favorites).apply()
+    }
+
+    // 💖 Smooth heart animation
+    private fun animateHeart() {
+        btnFavorite.animate()
+            .scaleX(1.3f)
+            .scaleY(1.3f)
+            .setDuration(120)
+            .withEndAction {
+                btnFavorite.animate().scaleX(1f).scaleY(1f).setDuration(120)
+            }.start()
     }
 }

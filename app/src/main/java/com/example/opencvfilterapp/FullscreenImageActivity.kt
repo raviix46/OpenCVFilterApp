@@ -24,7 +24,7 @@ class FullscreenImageActivity : AppCompatActivity() {
         // Load image smoothly
         Glide.with(this)
             .load(uri)
-            .placeholder(R.drawable.image_sample)
+            .placeholder(android.R.color.darker_gray)
             .fitCenter()
             .into(binding.fullscreenImage)
 
