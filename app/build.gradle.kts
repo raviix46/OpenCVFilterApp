@@ -69,6 +69,10 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
+
+    // ✅ EXIF Metadata Support (for saving filter name & intensity)
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
