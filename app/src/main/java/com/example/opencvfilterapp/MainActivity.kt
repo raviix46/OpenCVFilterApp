@@ -36,9 +36,10 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
     private var filterIntensity: Int = 50
     private var outputBitmap: Bitmap? = null
     @Volatile private var latestFrame: Bitmap? = null
-
     private var frameCount = 0
     private var lastFpsTs = SystemClock.elapsedRealtime()
+
+    private var enableWatermark = true // toggle watermark feature on/off
 
     companion object {
         init {
@@ -78,7 +79,6 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         // 🎛️ Filter options
         val filters = listOf("None", "Cartoon", "Edge", "Blur", "Grayscale")
 
-        // Temporary hint spinner
         val hintAdapter = object : ArrayAdapter<String>(
             this,
             R.layout.spinner_item,
@@ -150,6 +150,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
 
     // ---------- CAMERA ----------
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) = openCamera()
+
     private fun openCamera() {
         val manager = getSystemService(CAMERA_SERVICE) as CameraManager
         val cameraId = manager.cameraIdList[0]
@@ -212,10 +213,44 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
         }
     }
 
+    // ---------- 🖋️ WATERMARK FUNCTION ----------
+    private fun addWatermarkToBitmap(
+        original: Bitmap,
+        text: String,
+        position: String = "bottom-right",
+        color: Int = Color.parseColor("#E0E0E0"),  // light grey
+        alpha: Int = 210,
+        textSizeRatio: Float = 0.035f
+    ): Bitmap {
+        val result = original.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(result)
+
+        val paint = Paint().apply {
+            this.color = color
+            this.alpha = alpha
+            this.textSize = result.width * textSizeRatio
+            this.typeface = Typeface.create("sans-serif-light", Typeface.NORMAL) // sleek thin font
+            this.isAntiAlias = true
+            this.letterSpacing = 0.02f
+            this.setShadowLayer(1.8f, 1.2f, 1.2f, Color.parseColor("#44000000")) // soft shadow
+        }
+
+        val textWidth = paint.measureText(text)
+        val margin = 35f
+        val x = if (position == "bottom-right") result.width - textWidth - margin else margin
+        val y = result.height - margin - 10f // raised slightly for better placement
+
+        canvas.drawText(text, x, y, paint)
+        return result
+    }
+
     // ---------- SAVE IMAGE ----------
     private fun saveCurrentFrame() {
         val bmp = latestFrame ?: return toast("No frame available yet")
-        val copy = bmp.copy(Bitmap.Config.ARGB_8888, false)
+        val copy = if (enableWatermark)
+            addWatermarkToBitmap(bmp, "📸 ${filterMode.name} Mode • ${filterIntensity}%")
+        else bmp.copy(Bitmap.Config.ARGB_8888, false)
+
         saveBitmapToGallery(copy)
     }
 
@@ -244,7 +279,6 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 values.put(MediaStore.Images.Media.IS_PENDING, 0)
                 contentResolver.update(newUri, values, null, null)
 
-                // 🧠 Add EXIF metadata
                 try {
                     val fd = contentResolver.openFileDescriptor(newUri, "rw")?.fileDescriptor
                     fd?.let {
@@ -266,7 +300,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 Uri.fromFile(file)
             }
 
-            // ✅ Thumbnail animation
+            // ✅ Thumbnail animation + toast unchanged
             binding.thumbnailPreview.apply {
                 if (visibility == View.VISIBLE) {
                     animate().translationY(-40f).alpha(0f).setDuration(200).withEndAction {
@@ -291,7 +325,6 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
                 startActivity(intent)
             }
 
-            // ✅ Top-center animated custom toast
             val toastView = layoutInflater.inflate(R.layout.custom_toast, null)
             val toastText = toastView.findViewById<TextView>(R.id.toastText)
             toastText.text = "📸 Image Saved as: $filename"
@@ -302,7 +335,7 @@ class MainActivity : AppCompatActivity(), TextureView.SurfaceTextureListener {
             val toast = Toast(this)
             toast.view = toastView
             toast.duration = Toast.LENGTH_SHORT
-            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 200)
+            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 160)
             toast.show()
 
         } catch (e: Exception) {
