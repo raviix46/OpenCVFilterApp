@@ -1,24 +1,33 @@
 package com.example.opencvfilterapp
 
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.opencvfilterapp.databinding.ItemGalleryImageBinding
 
-/**
- * Adapter for the full-screen image viewer inside ViewPager2.
- * Handles smooth transitions and optional zoom support.
- */
 class GalleryAdapter(
-    private val images: List<Uri>
+    private val images: List<Uri>,
+    private val onImageClick: (Uri, Int) -> Unit
 ) : RecyclerView.Adapter<GalleryAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemGalleryImageBinding) :
-        RecyclerView.ViewHolder(binding.root)
+        RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            // Handle clicks safely with position check
+            binding.imageView.setOnClickListener {
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION && pos < images.size) {
+                    onImageClick(images[pos], pos)
+                }
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemGalleryImageBinding.inflate(
@@ -32,26 +41,20 @@ class GalleryAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val uri = images[position]
 
-        // 🌀 Load image using Glide with smooth fade-in animation
+        // Debug log for diagnostics
+        Log.d("GalleryAdapter", "Loading URI: $uri (position=$position)")
+
+        holder.binding.imageView.visibility = View.VISIBLE
+
+        // Load image with smooth fade, cache, and thumbnail optimization
         Glide.with(holder.binding.imageView.context)
             .load(uri)
             .placeholder(android.R.color.darker_gray)
             .error(android.R.color.darker_gray)
-            .fitCenter()
-            .transition(
-                com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade(300)
-            ) // ✨ smooth fade-in
+            .centerCrop() // ensures proper grid crop
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .thumbnail(0.25f) // quick preview
             .into(holder.binding.imageView)
-
-        // 📸 Set default scale behavior
-        holder.binding.imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-
-        // 🔍 OPTIONAL: Enable pinch-to-zoom (requires PhotoView)
-        // Uncomment the next lines if you replace ImageView with PhotoView in item_gallery_image.xml
-        // if (holder.binding.imageView is PhotoView) {
-        //     (holder.binding.imageView as PhotoView).setZoomable(true)
-        //     (holder.binding.imageView as PhotoView).maximumScale = 4.0f
-        // }
     }
 
     override fun getItemCount(): Int = images.size

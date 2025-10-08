@@ -1,85 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#101010">
+    android:orientation="vertical"
+    android:background="#000000">
 
-    <!-- 🖼️ Swipeable full-screen image viewer -->
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:overScrollMode="never" />
-
-    <!-- 🎛️ Bottom overlay bar (info + buttons) -->
-    <LinearLayout
-        android:id="@+id/galleryControls"
+    <!-- Header -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:orientation="vertical"
-        android:paddingVertical="10dp"
-        android:paddingHorizontal="16dp"
-        android:background="@drawable/gallery_overlay_bg"
-        android:elevation="8dp">
+        android:text="📸 My Captured Photos"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:padding="12dp"
+        android:fontFamily="sans-serif-medium" />
 
-        <!-- 🕒 Filter & Timestamp Info -->
-        <TextView
-            android:id="@+id/photoInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Filter: None • 2025-10-08 19:45"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:paddingBottom="6dp" />
+    <!-- RecyclerView for image grid -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:visibility="visible" />
 
-        <!-- ⚙️ Control Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="2dp">
-
-            <!-- 📤 Share -->
-            <ImageButton
-                android:id="@+id/btnShare"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_share"
-                android:background="@drawable/rounded_button_bg"
-                android:contentDescription="Share"
-                android:tint="#FFFFFF"
-                android:padding="10dp"
-                android:layout_marginHorizontal="8dp" />
-
-            <!-- 🗑️ Delete -->
-            <ImageButton
-                android:id="@+id/btnDelete"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_delete"
-                android:background="@drawable/rounded_button_bg"
-                android:contentDescription="Delete"
-                android:tint="#FFFFFF"
-                android:padding="10dp"
-                android:layout_marginHorizontal="8dp" />
-
-            <!-- ❤️ Favorite -->
-            <ImageButton
-                android:id="@+id/btnFavorite"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_favorite_border"
-                android:background="@drawable/rounded_button_bg"
-                android:contentDescription="Favorite"
-                android:tint="#FFFFFF"
-                android:padding="10dp"
-                android:layout_marginHorizontal="8dp" />
-        </LinearLayout>
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>

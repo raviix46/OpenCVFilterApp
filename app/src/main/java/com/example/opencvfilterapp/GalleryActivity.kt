@@ -2,17 +2,15 @@ package com.example.opencvfilterapp
 
 import android.content.ContentUris
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.ImageButton
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.exifinterface.media.ExifInterface
-import androidx.viewpager2.widget.ViewPager2
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.opencvfilterapp.databinding.ActivityGalleryBinding
-import java.io.InputStream
 
 class GalleryActivity : AppCompatActivity() {
 
@@ -20,174 +18,128 @@ class GalleryActivity : AppCompatActivity() {
     private val imageUris = mutableListOf<Uri>()
     private lateinit var adapter: GalleryAdapter
 
-    private lateinit var viewPager: ViewPager2
-    private lateinit var photoInfo: TextView
-    private lateinit var btnShare: ImageButton
-    private lateinit var btnDelete: ImageButton
-    private lateinit var btnFavorite: ImageButton
-
-    // ❤️ Store favorites persistently
-    private val favorites = mutableSetOf<String>()
-    private val prefs by lazy { getSharedPreferences("gallery_prefs", MODE_PRIVATE) }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGalleryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Bind views
-        viewPager = binding.viewPager
-        photoInfo = binding.photoInfo
-        btnShare = binding.btnShare
-        btnDelete = binding.btnDelete
-        btnFavorite = binding.btnFavorite
+        // 🖼️ Setup 3-column grid layout
+        binding.recyclerView.layoutManager = GridLayoutManager(this, 3)
+        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.visibility = View.VISIBLE
 
-        // Load favorites from storage
-        favorites.addAll(prefs.getStringSet("favorites", emptySet()) ?: emptySet())
-
-        // Load all saved images
-        loadImages()
-
-        // Adapter setup
-        adapter = GalleryAdapter(imageUris)
-        viewPager.adapter = adapter
-
-        // Initialize first photo info
-        if (imageUris.isNotEmpty()) updatePhotoInfo(0)
-
-        // Swipe listener
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                updatePhotoInfo(position)
+        // 🧩 Setup adapter with click handler
+        adapter = GalleryAdapter(imageUris) { uri, position ->
+            val intent = Intent(this@GalleryActivity, FullscreenImageActivity::class.java).apply {
+                putStringArrayListExtra(
+                    "allImageUris",
+                    ArrayList(imageUris.map { it.toString() })
+                )
+                putExtra("startPosition", position)
             }
-        })
-
-        // ✨ Tap anywhere on the image to hide/show control bar
-        viewPager.setOnClickListener {
-            val controls = binding.galleryControls
-            controls.animate()
-                .alpha(if (controls.alpha == 1f) 0f else 1f)
-                .setDuration(200)
-                .start()
+            // ✅ Launch fullscreen with result listener
+            startActivityForResult(intent, 101)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
 
-        // --- Button Handlers ---
-        btnShare.setOnClickListener { shareImage(getCurrentUri()) }
-        btnDelete.setOnClickListener { deleteImage(getCurrentUri()) }
-        btnFavorite.setOnClickListener { toggleFavorite(getCurrentUri()) }
+        binding.recyclerView.adapter = adapter
+
+        // 🗂️ Load and display images
+        loadImages()
+        adapter.notifyDataSetChanged()
+
+        // 🔄 Optional: rescan MediaStore for new captures
+        rescanMedia()
     }
 
-    private fun getCurrentUri(): Uri = imageUris[viewPager.currentItem]
+    // 🧠 Reload when returning from fullscreen (after deletion)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
-    // 🖼 Load image URIs from MediaStore
+        if (requestCode == 101 && resultCode == RESULT_OK) {
+            val deletedUri = data?.getStringExtra("deletedUri")
+            if (deletedUri != null) {
+                // 🗑 Remove the deleted image from list
+                val removed = imageUris.removeIf { it.toString() == deletedUri }
+                if (removed) {
+                    adapter.notifyDataSetChanged()
+                    Toast.makeText(this, "🗑️ Gallery updated", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Reload completely if list mismatch
+                    loadImages()
+                    adapter.notifyDataSetChanged()
+                }
+            } else {
+                // If no URI sent, just refresh gallery
+                loadImages()
+                adapter.notifyDataSetChanged()
+            }
+        }
+    }
+
+    // 🗂️ Load images stored in media folders
     private fun loadImages() {
         imageUris.clear()
-        val projection = arrayOf(MediaStore.Images.Media._ID)
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DATA,
+            MediaStore.Images.Media.RELATIVE_PATH
+        )
+
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
         val cursor = contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             projection,
-            "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?",
-            arrayOf("%OpenCVFilterApp%"),
+            null,
+            null,
             sortOrder
         )
 
         cursor?.use {
             val idColumn = it.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val dataColumn = it.getColumnIndex(MediaStore.Images.Media.DATA)
+            val relPathColumn = it.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+
             while (it.moveToNext()) {
-                val id = it.getLong(idColumn)
-                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                imageUris.add(uri)
+                val absPath = if (dataColumn != -1) it.getString(dataColumn) else ""
+                val relPath = if (relPathColumn != -1) it.getString(relPathColumn) else ""
+
+                if (absPath.contains("OpenCVFilterApp", ignoreCase = true) ||
+                    relPath.contains("OpenCVFilterApp", ignoreCase = true) ||
+                    absPath.contains("Pictures", ignoreCase = true) ||
+                    absPath.contains("DCIM", ignoreCase = true)
+                ) {
+                    val id = it.getLong(idColumn)
+                    val uri = ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
+                    )
+                    imageUris.add(uri)
+                }
             }
+        }
+
+        if (imageUris.isEmpty()) {
+            Toast.makeText(this, "⚠️ No saved images found!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // 🧠 Display EXIF metadata
-    private fun updatePhotoInfo(position: Int) {
-        val uri = imageUris[position]
+    // 🔄 Force MediaStore rescan for new captures
+    private fun rescanMedia() {
         try {
-            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-            val exif = inputStream?.let { ExifInterface(it) }
-
-            val filterInfo = exif?.getAttribute(ExifInterface.TAG_USER_COMMENT)
-                ?: "Filter Info Unavailable"
-            val timestamp = exif?.getAttribute(ExifInterface.TAG_DATETIME)
-                ?: "Unknown Date"
-
-            photoInfo.text = "🖋 $filterInfo • $timestamp"
-
-            // Update favorite icon
-            val key = uri.toString()
-            if (favorites.contains(key))
-                btnFavorite.setImageResource(R.drawable.ic_favorite)
-            else
-                btnFavorite.setImageResource(R.drawable.ic_favorite_border)
-
+            MediaScannerConnection.scanFile(
+                this,
+                arrayOf("/storage/emulated/0/Pictures/OpenCVFilterApp"),
+                arrayOf("image/jpeg")
+            ) { _, _ ->
+                runOnUiThread {
+                    loadImages()
+                    adapter.notifyDataSetChanged()
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            photoInfo.text = "❌ Metadata not found"
         }
-    }
-
-    // 📤 Share photo
-    private fun shareImage(uri: Uri) {
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "image/jpeg"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(shareIntent, "Share Image via"))
-    }
-
-    // 🗑️ Delete photo
-    private fun deleteImage(uri: Uri) {
-        try {
-            contentResolver.delete(uri, null, null)
-            val position = viewPager.currentItem
-            imageUris.removeAt(position)
-            adapter.notifyItemRemoved(position)
-            Toast.makeText(this, "🗑️ Image deleted", Toast.LENGTH_SHORT).show()
-
-            if (imageUris.isEmpty()) {
-                finish()
-            } else {
-                val newPos = position.coerceAtMost(imageUris.size - 1)
-                viewPager.setCurrentItem(newPos, true)
-                updatePhotoInfo(newPos)
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "❌ Failed to delete: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // ❤️ Favorite / Unfavorite (Persistent + Animated)
-    private fun toggleFavorite(uri: Uri) {
-        val key = uri.toString()
-        if (favorites.contains(key)) {
-            favorites.remove(key)
-            btnFavorite.setImageResource(R.drawable.ic_favorite_border)
-            animateHeart()
-            Toast.makeText(this, "💔 Removed from favorites", Toast.LENGTH_SHORT).show()
-        } else {
-            favorites.add(key)
-            btnFavorite.setImageResource(R.drawable.ic_favorite)
-            animateHeart()
-            Toast.makeText(this, "❤️ Added to favorites", Toast.LENGTH_SHORT).show()
-        }
-
-        // Save favorites persistently
-        prefs.edit().putStringSet("favorites", favorites).apply()
-    }
-
-    // 💖 Smooth heart animation
-    private fun animateHeart() {
-        btnFavorite.animate()
-            .scaleX(1.3f)
-            .scaleY(1.3f)
-            .setDuration(120)
-            .withEndAction {
-                btnFavorite.animate().scaleX(1f).scaleY(1f).setDuration(120)
-            }.start()
     }
 }
